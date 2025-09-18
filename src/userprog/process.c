@@ -18,8 +18,27 @@
 #include "threads/thread.h"
 #include "threads/vaddr.h"
 
+#define MAX_CMD 128
+
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
+
+
+void parse_cmdline (char *file_name, const char *cmdline)
+{
+	char cmdbuf[MAX_CMD];
+	strlcpy (cmdbuf, cmdline, MAX_CMD);
+
+	for (size_t i = 0; i < MAX_CMD; i++) {
+		if (cmdbuf[i] == ' ') {
+			cmdbuf[i] = '\0';
+			break;
+		}
+	}
+
+	snprintf (file_name, MAX_CMD, "%s", cmdbuf);
+}
+
 
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
@@ -38,8 +57,17 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
+
+  // TODO: Parse FILE_NAME
+  char cmdline[128];
+  parse_cmdline (cmdline, file_name);
+ 
+
+
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (cmdline, PRI_DEFAULT, start_process, fn_copy);
+
+
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
   return tid;
